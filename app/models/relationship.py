@@ -1,8 +1,13 @@
 from dataclasses import dataclass
 
 
-@dataclass
+CONTAINS = "CONTAINS"
+IMPORTS = "IMPORTS"
+CALLS = "CALLS"
+
+
+@dataclass(frozen=True)
 class Relationship:
-    source_id: int
-    target_id: int
+    source_id: str
+    target_id: str
     relationship_type: str
