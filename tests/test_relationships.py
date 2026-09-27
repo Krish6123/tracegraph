@@ -2,11 +2,9 @@ from pathlib import Path
 
 from app.analysis.engine import analyze_repository
 from app.models.relationship import CALLS, CONTAINS, IMPORTS
-from app.parser.ast_parser import (
-    extract_entities,
-    extract_relationships,
-    parse_python_file,
-)
+from app.parser.entity_extractor import extract_entities
+from app.analysis.builder import extract_relationships
+from app.parser.core import parse_python_file
 
 
 def _rel_types(result, source_name, target_name):

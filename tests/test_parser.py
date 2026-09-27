@@ -1,7 +1,8 @@
 from pathlib import Path
 
 from app.models.entity import CLASS, FILE, FUNCTION
-from app.parser.ast_parser import extract_entities, parse_python_file
+from app.parser.entity_extractor import extract_entities
+from app.parser.core import parse_python_file
 
 
 def test_extract_function():

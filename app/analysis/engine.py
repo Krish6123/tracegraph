@@ -5,11 +5,9 @@ from app.analysis.impact import ImpactReport, analyze_impact
 from app.graph.dependency_graph import DependencyGraph
 from app.models.entity import Entity
 from app.models.relationship import Relationship
-from app.parser.ast_parser import (
-    UnresolvedCall,
-    extract_repository_entities_and_relationships,
-    parse_python_file,
-)
+from app.models.unresolved import UnresolvedCall
+from app.analysis.builder import extract_repository_entities_and_relationships
+from app.parser.core import parse_python_file
 from app.scanner.repository import find_python_files, find_python_packages
 
 
