@@ -13,6 +13,8 @@ class Entity:
     entity_type: str
     file_path: str
     line_number: int
+    # Immediate container (file, class, or function). Used for CONTAINS.
+    parent_id: str | None = None
 
 
 def make_entity_id(

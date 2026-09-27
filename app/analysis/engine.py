@@ -6,10 +6,11 @@ from app.graph.dependency_graph import DependencyGraph
 from app.models.entity import Entity
 from app.models.relationship import Relationship
 from app.parser.ast_parser import (
+    UnresolvedCall,
     extract_repository_entities_and_relationships,
     parse_python_file,
 )
-from app.scanner.repository import find_python_files
+from app.scanner.repository import find_python_files, find_python_packages
 
 
 @dataclass
@@ -20,6 +21,8 @@ class AnalysisResult:
     relationships: list[Relationship]
     graph: DependencyGraph
     parse_errors: list[tuple[str, str]] = field(default_factory=list)
+    packages: list[str] = field(default_factory=list)
+    unresolved_calls: list[UnresolvedCall] = field(default_factory=list)
 
     def entity_by_name(self, name: str, entity_type: str | None = None) -> Entity | None:
         for entity in self.entities:
@@ -44,6 +47,7 @@ def analyze_repository(repository_path: str) -> AnalysisResult:
     """
     python_files = find_python_files(repository_path)
     repository_root = Path(repository_path)
+    packages = find_python_packages(repository_path)
 
     parsed_files: list[tuple[str, object]] = []
     parse_errors: list[tuple[str, str]] = []
@@ -57,8 +61,8 @@ def analyze_repository(repository_path: str) -> AnalysisResult:
             continue
         parsed_files.append((relative, tree))
 
-    entities, relationships = extract_repository_entities_and_relationships(
-        parsed_files
+    entities, relationships, unresolved_calls = (
+        extract_repository_entities_and_relationships(parsed_files)
     )
 
     graph = DependencyGraph()
@@ -74,6 +78,8 @@ def analyze_repository(repository_path: str) -> AnalysisResult:
         relationships=relationships,
         graph=graph,
         parse_errors=parse_errors,
+        packages=packages,
+        unresolved_calls=unresolved_calls,
     )
 
 

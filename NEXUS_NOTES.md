@@ -1,15 +1,16 @@
-# Nexus notes — Milestone 1
+# Nexus notes — Milestone 2
 
 This document describes the deterministic static-analysis engine. It is written so the design can be explained in an interview without extra libraries or hidden magic.
 
 ## Implemented
 
-- Scan a local directory for Python files
+- Scan a local directory for Python files (including nested packages and `__init__.py`)
 - Parse each file with the standard-library `ast` module
-- Extract FILE, FUNCTION, and CLASS entities
+- Extract FILE, FUNCTION, and CLASS entities (including methods)
 - Give every entity a unique stable string ID
-- Extract CONTAINS, IMPORTS, and CALLS relationships
-- Resolve simple local imports and simple calls
+- Extract CONTAINS, IMPORTS, CALLS, and INSTANTIATES relationships
+- Resolve simple local imports, module imports, and import aliases
+- Resolve simple method calls (`self.method()`, `obj.method()`) and class constructors
 - Build an adjacency-list graph with forward and reverse indexes
 - Traverse with DFS or BFS using a visited set
 - Report potential impact of changing a selected entity
@@ -60,11 +61,12 @@ Traversal (`traverse`) supports `direction="forward"|"reverse"` and `algorithm="
 
 ## Supported relationships
 
-| Type       | Direction              | Meaning |
-|------------|------------------------|---------|
-| CONTAINS   | file → function/class  | The file defines that entity |
-| IMPORTS    | file → file            | A local module import resolved to a repository file |
-| CALLS      | function → function    | A statically resolved call |
+| Type         | Direction              | Meaning |
+|--------------|------------------------|---------|
+| CONTAINS     | file/class → func/class| The file or class defines that entity |
+| IMPORTS      | file → file            | A local module import resolved to a repository file |
+| CALLS        | function → function    | A statically resolved call |
+| INSTANTIATES | function → class       | A statically resolved class constructor call |
 
 ## Import resolution
 
@@ -131,12 +133,10 @@ python -m app.cli examples/sample_project
 Static analysis cannot recover everything Python can do at runtime. Unresolved or out of scope:
 
 - Relative imports (`from .payment import process_payment`)
-- `import pkg.sub.module` unless that dotted name maps to a file
 - Dynamic imports (`__import__`, `importlib`)
 - Dynamic calls (`getattr`, callbacks, function arguments)
 - Attribute chains longer than `module.func` (`pkg.mod.func()`)
-- Method calls on instances (`obj.save()`, `self.save()`)
-- Constructors as CALLS to a class (`Order()` is not a function call edge)
+- Highly ambiguous method calls on untyped instances (if multiple classes could match `obj.save()`, the edge is omitted)
 - Overloaded / duplicate names in one file (the earliest line is used)
 - Star imports from non-local modules
 - Control-flow sensitivity (a call inside `if False` still counts)

@@ -62,7 +62,7 @@ def test_extract_class_and_method(tmp_path):
     assert FUNCTION in types
 
     catalog = next(entity for entity in entities if entity.name == "Catalog")
-    items = next(entity for entity in entities if entity.name == "items")
+    items = next(entity for entity in entities if entity.name == "Catalog.items")
     assert catalog.entity_type == CLASS
     assert items.entity_type == FUNCTION
     assert catalog.line_number == 1

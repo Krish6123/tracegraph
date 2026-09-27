@@ -4,6 +4,7 @@ from dataclasses import dataclass
 CONTAINS = "CONTAINS"
 IMPORTS = "IMPORTS"
 CALLS = "CALLS"
+INSTANTIATES = "INSTANTIATES"
 
 
 @dataclass(frozen=True)

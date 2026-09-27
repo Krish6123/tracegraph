@@ -1,6 +1,6 @@
 # Nexus — Code Intelligence & Impact Analysis Platform
 
-Milestone 1 is a **deterministic static-analysis engine** for local Python repositories.
+Milestone 2 is a **deterministic static-analysis engine** for local Python repositories.
 
 It answers a practical question:
 
@@ -10,11 +10,11 @@ There is no AI, API server, database, or UI in this milestone.
 
 ## What is implemented
 
-- Repository scanner (local `.py` files)
+- Repository scanner (local `.py` files, nested packages)
 - Python AST parsing
-- FILE, FUNCTION, and CLASS entities with stable IDs
-- Relationships: `CONTAINS`, `IMPORTS`, `CALLS`
-- Simple local import and call resolution
+- FILE, FUNCTION, and CLASS entities (including methods)
+- Relationships: `CONTAINS`, `IMPORTS`, `CALLS`, `INSTANTIATES`
+- Simple local import and call resolution (including aliases, `self.method()`, constructors, and `obj.method()`)
 - Adjacency-list dependency graph (forward and reverse)
 - DFS/BFS traversal with a visited set (cycles are safe)
 - Impact analysis built on graph traversal
@@ -24,6 +24,7 @@ There is no AI, API server, database, or UI in this milestone.
 
 ```bash
 python -m app.cli examples/sample_project
+python -m app.cli examples/realistic_project
 python -m pytest
 ```
 
@@ -56,6 +57,6 @@ Changing `process_payment` **potentially affects** `create_order` immediately, a
 
 ## Known limitations
 
-Static resolution is intentionally simple. Unresolved cases include relative imports, dynamic calls, `self.method()`, chained attributes, and third-party / stdlib modules.
+Static resolution is intentionally simple. Unresolved cases include relative imports, dynamic calls, highly ambiguous method calls on untyped instances, chained attributes, and third-party / stdlib modules.
 
 See [NEXUS_NOTES.md](NEXUS_NOTES.md) for graph representation, relationship rules, and a fuller limitation list.
