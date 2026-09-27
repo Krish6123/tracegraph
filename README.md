@@ -1,12 +1,12 @@
 # Nexus — Code Intelligence & Impact Analysis Platform
 
-Milestone 2 is a **deterministic static-analysis engine** for local Python repositories.
+Milestone 3 adds a **FastAPI layer** over the deterministic static-analysis engine for local Python repositories.
 
 It answers a practical question:
 
 > If this function, class, or file changes, what else in the repository is *potentially affected*?
 
-There is no AI, API server, database, or UI in this milestone.
+There is no PostgreSQL, database, frontend, or AI in this milestone. It uses an in-memory store for analysis results.
 
 ## What is implemented
 
@@ -27,6 +27,48 @@ python -m app.cli examples/sample_project
 python -m app.cli examples/realistic_project
 python -m pytest
 ```
+
+
+## API Server
+
+The API runs locally using FastAPI. Data is stored in-memory and will disappear when the server restarts.
+
+### Install dependencies
+```bash
+pip install -r requirements.txt
+```
+
+### Start the server
+```bash
+python -m uvicorn app.main:app --reload
+```
+
+### Endpoints
+
+**Check Health:**
+```bash
+curl http://localhost:8000/health
+# {"status": "ok"}
+```
+
+**Analyze a Repository:**
+*Note: Currently only supports local filesystem paths. Future versions will include repository ingestion mechanisms.*
+```bash
+curl -X POST http://localhost:8000/analyze -H "Content-Type: application/json" -d '{"repository_path": "examples/sample_project"}'
+# {"analysis_id": "...", "repository_path": "...", "total_entities": 8, "total_relationships": 10, "status": "success"}
+```
+
+**Retrieve Entities:**
+```bash
+curl http://localhost:8000/analysis/<analysis_id>/entities
+```
+
+**Retrieve Impact Analysis:**
+```bash
+curl "http://localhost:8000/analysis/<analysis_id>/impact?entity_id=function:examples/sample_project/payment.py:process_payment:3"
+```
+
+Automatic interactive documentation is available at `http://localhost:8000/docs` while the server is running.
 
 ## Architecture
 

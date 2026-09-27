@@ -1,4 +1,4 @@
-# Nexus notes — Milestone 2
+# Nexus notes — Milestone 3
 
 This document describes the deterministic static-analysis engine. It is written so the design can be explained in an interview without extra libraries or hidden magic.
 
@@ -16,7 +16,14 @@ This document describes the deterministic static-analysis engine. It is written 
 - Report potential impact of changing a selected entity
 - CLI: `python -m app.cli <repository_path>`
 
-Not in this milestone: AI/LLM, FastAPI, PostgreSQL, frontend, Docker, Redis, NetworkX, authentication, GitHub OAuth, multi-language support.
+Not in this milestone: AI/LLM, PostgreSQL, frontend, Docker, Redis, NetworkX, authentication, GitHub OAuth, multi-language support.
+
+
+## API Layer
+A thin FastAPI layer is implemented over the deterministic engine.
+- Routing logic converts HTTP requests into internal engine logic.
+- An in-memory store keeps track of `AnalysisResult` instances. Data is wiped upon server restart.
+- Future direction involves moving toward PostgreSQL and a scalable repository ingestion pipeline.
 
 ## Architecture
 
