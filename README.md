@@ -1,12 +1,12 @@
 # Nexus — Code Intelligence & Impact Analysis Platform
 
-Milestone 3 adds a **FastAPI layer** over the deterministic static-analysis engine for local Python repositories.
+Milestone 4 adds **PostgreSQL persistence via SQLAlchemy** over the FastAPI layer.
 
 It answers a practical question:
 
 > If this function, class, or file changes, what else in the repository is *potentially affected*?
 
-There is no PostgreSQL, database, frontend, or AI in this milestone. It uses an in-memory store for analysis results.
+There is no frontend or AI in this milestone. It uses PostgreSQL (or SQLite for local dev) via SQLAlchemy for persistence.
 
 ## What is implemented
 
@@ -31,7 +31,7 @@ python -m pytest
 
 ## API Server
 
-The API runs locally using FastAPI. Data is stored in-memory and will disappear when the server restarts.
+The API runs locally using FastAPI. Data is persisted to a database (defaulting to a local SQLite database for zero-config development, but supports PostgreSQL).
 
 ### Install dependencies
 ```bash
@@ -41,6 +41,17 @@ pip install -r requirements.txt
 ### Start the server
 ```bash
 python -m uvicorn app.main:app --reload
+```
+
+
+### Configuration
+Configure the database via the `DATABASE_URL` environment variable:
+```bash
+# SQLite (default)
+export DATABASE_URL="sqlite:///./nexus.db"
+
+# PostgreSQL
+export DATABASE_URL="postgresql+psycopg://user:password@localhost:5432/nexus"
 ```
 
 ### Endpoints

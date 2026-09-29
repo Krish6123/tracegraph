@@ -32,3 +32,9 @@ class ImpactReportSchema(BaseModel):
     indirect_dependencies: List[EntitySchema]
     direct_dependents: List[EntitySchema]
     indirect_dependents: List[EntitySchema]
+
+class UnresolvedCallSchema(BaseModel):
+    file_path: str
+    line_number: int
+    expression: str
+    reason: str

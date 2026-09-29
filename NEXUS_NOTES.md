@@ -1,4 +1,4 @@
-# Nexus notes — Milestone 3
+# Nexus notes — Milestone 4
 
 This document describes the deterministic static-analysis engine. It is written so the design can be explained in an interview without extra libraries or hidden magic.
 
@@ -16,14 +16,16 @@ This document describes the deterministic static-analysis engine. It is written 
 - Report potential impact of changing a selected entity
 - CLI: `python -m app.cli <repository_path>`
 
-Not in this milestone: AI/LLM, PostgreSQL, frontend, Docker, Redis, NetworkX, authentication, GitHub OAuth, multi-language support.
+Not in this milestone: AI/LLM, frontend, Docker, Redis, NetworkX, authentication, GitHub OAuth, multi-language support.
 
 
 ## API Layer
 A thin FastAPI layer is implemented over the deterministic engine.
 - Routing logic converts HTTP requests into internal engine logic.
-- An in-memory store keeps track of `AnalysisResult` instances. Data is wiped upon server restart.
-- Future direction involves moving toward PostgreSQL and a scalable repository ingestion pipeline.
+- Persistence is handled via SQLAlchemy (using `psycopg` for PostgreSQL and native `sqlite3` for local testing/dev).
+- The `DATABASE_URL` environment variable drives connections.
+- During impact analysis, the DB objects are hydrated back into a `DependencyGraph` in-memory. This prevents tightly coupling the complex pathfinding logic to SQL CTEs, remaining easily explainable.
+- `Entity.entity_id` values (e.g. `file:main.py`) are strictly preserved. Internal DB `id` integers act only as surrogate primary keys.
 
 ## Architecture
 
