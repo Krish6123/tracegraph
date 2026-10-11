@@ -54,6 +54,18 @@ def test_realistic_project_analysis():
     
     # start() calls service.process()
     assert (function_start, method_process) in calls_edges
+
+    # Class-qualified methods, module aliases, from-package imports, and
+    # imported function aliases resolve to the same local targets.
+    function_process_payment = nodes["process_payment"].id
+    assert (function_start, function_process_payment) in calls_edges
+    process_calls = [
+        edge for edge in edges
+        if edge.relationship_type == CALLS
+        and edge.source_id == function_start
+        and edge.target_id == method_process
+    ]
+    assert len(process_calls) == 1
     
     # process() calls self.validate()
     method_validate = nodes["PaymentService.validate"].id

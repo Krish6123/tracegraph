@@ -68,10 +68,21 @@ def main() -> None:
     print(f"Repository: {repository_path}")
     print()
 
+    if result.packages:
+        _print_section("Packages discovered")
+        for package in result.packages:
+            print(f"  - {package}")
+        print()
+
     _print_section("Files discovered")
     print(f"Python files found: {len(result.python_files)}")
     for file_path in result.python_files:
-        relative = Path(file_path)
+        try:
+            relative = Path(file_path).resolve().relative_to(
+                Path(repository_path).resolve()
+            )
+        except ValueError:
+            relative = Path(file_path)
         print(f"  - {relative.as_posix()}")
     print()
 

@@ -113,3 +113,13 @@ Changing `process_payment` **potentially affects** `create_order` immediately, a
 Static resolution is intentionally simple. Unresolved cases include relative imports, dynamic calls, highly ambiguous method calls on untyped instances, chained attributes, and third-party / stdlib modules.
 
 See [NEXUS_NOTES.md](NEXUS_NOTES.md) for graph representation, relationship rules, and a fuller limitation list.
+
+## Python package analysis
+
+Nexus scans nested Python directories and records repository-relative paths. It infers package names from directories containing `__init__.py` and module names from the file tree. For example, `services/payment_service.py` maps to `services.payment_service`. The scanner parses source with Python's `ast` module; it never executes the analyzed repository.
+
+Classes remain `CLASS` entities. Methods remain `FUNCTION` entities with qualified names such as `PaymentService.process`. `CONTAINS` edges represent file-to-class, class-to-method, and file-to-top-level-function structure.
+
+Imports are connected only when a module or symbol maps to a file/entity in the scanned repository. Simple aliases are tracked. Calls resolve same-file/imported functions, module attributes, `self.method()`, class-qualified calls, and object methods when the object is bound to a local class constructor. Constructor use is represented with `INSTANTIATES`; method invocation remains `CALLS`. Unknown or ambiguous receivers are omitted and may be listed as unresolved.
+
+This is static analysis: Nexus does not execute the analyzed code and does not perform complete Python type inference. Relative and dynamic imports, inheritance and dynamic dispatch, and untyped ambiguous method calls are outside the supported resolution rules. When Nexus cannot determine one local target from the available syntax and repository files, it leaves the relationship unresolved instead of guessing.
