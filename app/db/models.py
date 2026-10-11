@@ -11,6 +11,7 @@ class AnalysisRecord(Base):
     status = Column(String, nullable=False)
     parse_errors = Column(JSON, nullable=True)
     packages = Column(JSON, nullable=True)
+    commit_hash = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
 class EntityRecord(Base):

@@ -38,3 +38,17 @@ class UnresolvedCallSchema(BaseModel):
     line_number: int
     expression: str
     reason: str
+
+class GitImpactRequest(BaseModel):
+    base_ref: Optional[str] = None
+    target_ref: Optional[str] = None
+
+class FileChangeSchema(BaseModel):
+    change_type: str
+    path: str
+    old_path: Optional[str] = None
+
+class GitImpactResponse(BaseModel):
+    changes: List[FileChangeSchema]
+    mapped_entities: List[EntitySchema]
+    potentially_affected_dependents: List[EntitySchema]

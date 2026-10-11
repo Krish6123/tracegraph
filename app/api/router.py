@@ -2,7 +2,8 @@ import uuid
 from fastapi import APIRouter, HTTPException, Query, Depends
 from sqlalchemy.orm import Session
 from app.api.schemas import (
-    AnalyzeRequest, AnalysisSummaryResponse, EntitySchema, RelationshipSchema, ImpactReportSchema
+    AnalyzeRequest, AnalysisSummaryResponse, EntitySchema, RelationshipSchema, ImpactReportSchema,
+    GitImpactRequest, GitImpactResponse, FileChangeSchema
 )
 from app.api.deps import get_db
 import app.db.repository as db_repo
@@ -25,11 +26,16 @@ def analyze(req: AnalyzeRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Path is not a directory")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    
+    try:
+        from app.git.provider import GitProvider
+        commit_hash = GitProvider.get_current_commit(req.repository_path)
+    except Exception:
+        commit_hash = None
+        
     analysis_id = str(uuid.uuid4())
     
     try:
-        db_repo.save_analysis(db, analysis_id, result)
+        db_repo.save_analysis(db, analysis_id, result, commit_hash=commit_hash)
         db.commit()
     except Exception as e:
         db.rollback()
@@ -41,6 +47,51 @@ def analyze(req: AnalyzeRequest, db: Session = Depends(get_db)):
         total_entities=len(result.entities),
         total_relationships=len(result.relationships),
         status="success"
+    )
+
+@router.post("/analysis/{analysis_id}/git-impact", response_model=GitImpactResponse)
+def get_git_impact(analysis_id: str, req: GitImpactRequest, db: Session = Depends(get_db)):
+    record = db_repo.get_analysis(db, analysis_id)
+    if not record:
+        raise HTTPException(status_code=404, detail="Analysis not found")
+
+    from app.git.provider import GitProvider, GitError
+    from app.analysis.git_impact import analyze_git_impact
+
+    base_ref = req.base_ref or record.commit_hash
+    if not base_ref:
+        raise HTTPException(status_code=400, detail="No base_ref provided and analysis has no commit_hash")
+
+    try:
+        changes = GitProvider.get_changed_files(record.repository_path, base_ref, req.target_ref)
+    except GitError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+    graph = db_repo.reconstruct_graph(db, analysis_id)
+    report = analyze_git_impact(graph, changes)
+
+    def to_schema(e):
+        return EntitySchema(
+            id=e.id,
+            name=e.name,
+            entity_type=e.entity_type,
+            file_path=e.file_path,
+            line_number=e.line_number,
+            parent_id=e.parent_id
+        )
+
+    return GitImpactResponse(
+        changes=[
+            FileChangeSchema(
+                change_type=c.change_type.value,
+                path=c.path,
+                old_path=c.old_path
+            ) for c in report.changes
+        ],
+        mapped_entities=[to_schema(e) for e in report.mapped_entities],
+        potentially_affected_dependents=[to_schema(e) for e in report.potentially_affected_dependents]
     )
 
 @router.get("/analysis/{analysis_id}", response_model=AnalysisSummaryResponse)

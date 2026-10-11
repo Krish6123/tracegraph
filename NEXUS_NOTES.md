@@ -160,3 +160,11 @@ python -m pytest
 ```
 
 Coverage includes scanner path errors, entity extraction, classes/functions, imports, calls, graph nodes/edges, reverse graph, DFS/BFS, direct vs indirect dependencies, impact analysis, and cyclic dependencies.
+
+## Git-Aware Impact (M5)
+
+- Uses local `git` CLI via `subprocess`.
+- Granularity is at the file level: changing one function in a file causes the system to map the entire file (all entities within it) as "changed," thereby flagging dependents of *all* functions in that file as potentially affected.
+- Untracked new files are detected as ADDED but result in zero baseline impact (no baseline dependents).
+- Diffs against uncommitted working tree changes by default unless a `target_ref` is supplied.
+- Analysis baseline commit is recorded via `commit_hash` in `AnalysisRecord`.

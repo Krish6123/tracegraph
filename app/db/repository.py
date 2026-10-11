@@ -6,13 +6,14 @@ from app.models.relationship import Relationship
 from app.models.unresolved import UnresolvedCall
 from app.graph.dependency_graph import DependencyGraph
 
-def save_analysis(session: Session, analysis_id: str, result: AnalysisResult) -> None:
+def save_analysis(session: Session, analysis_id: str, result: AnalysisResult, commit_hash: str | None = None) -> None:
     analysis_record = AnalysisRecord(
         id=analysis_id,
         repository_path=result.repository_path,
         status="success",
         parse_errors=result.parse_errors,
-        packages=result.packages
+        packages=result.packages,
+        commit_hash=commit_hash
     )
     session.add(analysis_record)
 

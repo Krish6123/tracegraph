@@ -1,12 +1,12 @@
 # Nexus — Code Intelligence & Impact Analysis Platform
 
-Milestone 4 adds **PostgreSQL persistence via SQLAlchemy** over the FastAPI layer.
+Milestone 5 adds **Git-Aware Impact Analysis**.
 
 It answers a practical question:
 
 > If this function, class, or file changes, what else in the repository is *potentially affected*?
 
-There is no frontend or AI in this milestone. It uses PostgreSQL (or SQLite for local dev) via SQLAlchemy for persistence.
+There is no frontend or AI in this milestone. It uses PostgreSQL (or SQLite for local dev) via SQLAlchemy for persistence, and now integrates tightly with the local Git CLI to map working tree and commit changes to the baseline analysis graph.
 
 ## What is implemented
 
@@ -79,22 +79,27 @@ curl http://localhost:8000/analysis/<analysis_id>/entities
 curl "http://localhost:8000/analysis/<analysis_id>/impact?entity_id=function:examples/sample_project/payment.py:process_payment:3"
 ```
 
+**Retrieve Git-Aware Impact Analysis:**
+```bash
+curl -X POST http://localhost:8000/analysis/<analysis_id>/git-impact -H "Content-Type: application/json" -d '{}'
+```
+
 Automatic interactive documentation is available at `http://localhost:8000/docs` while the server is running.
 
 ## Architecture
 
 ```
-repository scanner
+repository scanner   <----   (Local Git CLI integration)
+        ↓                            |
+Python AST parser                    |
+        ↓                            |
+entities + relationships             |
+        ↓                            |
+dependency graph                     |
+        ↓                            |
+impact analysis     <----------------+
         ↓
-Python AST parser
-        ↓
-entities + relationships
-        ↓
-dependency graph
-        ↓
-impact analysis
-        ↓
-CLI
+API / CLI
 ```
 
 ## Example
