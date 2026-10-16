@@ -86,6 +86,26 @@ curl -X POST http://localhost:8000/analysis/<analysis_id>/git-impact -H "Content
 
 Automatic interactive documentation is available at `http://localhost:8000/docs` while the server is running.
 
+## Frontend dashboard (M6)
+
+The React + TypeScript dashboard lives in `frontend/` and uses the existing FastAPI endpoints. It does not change the deterministic analysis engine. The repository path entered in the browser must be accessible to the machine running FastAPI; the browser does not upload source files.
+
+Start the API in one terminal:
+```bash
+python -m uvicorn app.main:app --reload
+```
+
+Start the dashboard in another terminal:
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Open the Vite URL shown in the terminal. During development, Vite proxies `/api` requests to `http://127.0.0.1:8000` and removes the `/api` prefix before forwarding them. To use a different API origin, set `VITE_API_BASE_URL` to that origin and configure it to accept the `/api` prefix (or provide equivalent reverse-proxy routing). A production host must serve the built dashboard and route its API requests to FastAPI under the same origin.
+
+The dashboard includes repository analysis, an overview, a direct-neighbor dependency graph, entity impact reports, and Git-aware changed-file impact. Git comparisons use the baseline commit saved with the analysis by default and otherwise support optional base and target refs.
+
 ## Architecture
 
 ```

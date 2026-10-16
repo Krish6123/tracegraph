@@ -12,6 +12,7 @@ class AnalysisSummaryResponse(BaseModel):
     status: str
     parse_errors: Optional[List[List[str]]] = None
     packages: Optional[List[str]] = None
+    commit_hash: Optional[str] = None
 
 class EntitySchema(BaseModel):
     id: str

@@ -1,9 +1,10 @@
 from fastapi import FastAPI
 from app.api.router import router
-from app.db.database import engine, Base
+from app.db.database import engine
+from app.db.migrations import init_db
 
-# Create tables
-Base.metadata.create_all(bind=engine)
+# Initialize database schema and run pending migrations
+init_db(bind=engine)
 
 app = FastAPI(
     title="Nexus API",

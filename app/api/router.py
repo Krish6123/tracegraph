@@ -46,7 +46,8 @@ def analyze(req: AnalyzeRequest, db: Session = Depends(get_db)):
         repository_path=result.repository_path,
         total_entities=len(result.entities),
         total_relationships=len(result.relationships),
-        status="success"
+        status="success",
+        commit_hash=commit_hash
     )
 
 @router.post("/analysis/{analysis_id}/git-impact", response_model=GitImpactResponse)
@@ -58,12 +59,42 @@ def get_git_impact(analysis_id: str, req: GitImpactRequest, db: Session = Depend
     from app.git.provider import GitProvider, GitError
     from app.analysis.git_impact import analyze_git_impact
 
-    base_ref = req.base_ref or record.commit_hash
-    if not base_ref:
-        raise HTTPException(status_code=400, detail="No base_ref provided and analysis has no commit_hash")
+    if not GitProvider.is_git_repository(record.repository_path):
+        raise HTTPException(status_code=400, detail="Repository path is not a Git repository")
+
+    raw_base = req.base_ref.strip() if req.base_ref else ""
+    is_default_baseline = not raw_base or raw_base == "Saved analysis commit"
+
+    if is_default_baseline:
+        if not record.commit_hash:
+            raise HTTPException(
+                status_code=400,
+                detail="Analysis has no saved commit hash. Please specify a valid base Git reference."
+            )
+        base_ref = record.commit_hash
+        if not GitProvider.ref_exists(record.repository_path, base_ref):
+            raise HTTPException(
+                status_code=400,
+                detail=f"Saved analysis commit '{base_ref}' does not exist in repository"
+            )
+    else:
+        base_ref = raw_base
+        if not GitProvider.ref_exists(record.repository_path, base_ref):
+            raise HTTPException(
+                status_code=400,
+                detail=f"Git reference '{base_ref}' does not exist in repository"
+            )
+
+    target_ref = req.target_ref.strip() if req.target_ref and req.target_ref.strip() else None
+    if target_ref:
+        if not GitProvider.ref_exists(record.repository_path, target_ref):
+            raise HTTPException(
+                status_code=400,
+                detail=f"Git target reference '{target_ref}' does not exist in repository"
+            )
 
     try:
-        changes = GitProvider.get_changed_files(record.repository_path, base_ref, req.target_ref)
+        changes = GitProvider.get_changed_files(record.repository_path, base_ref, target_ref)
     except GitError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
@@ -110,7 +141,8 @@ def get_analysis_summary(analysis_id: str, db: Session = Depends(get_db)):
         total_relationships=len(relationships),
         status=record.status,
         parse_errors=record.parse_errors,
-        packages=record.packages
+        packages=record.packages,
+        commit_hash=record.commit_hash
     )
 
 @router.get("/analysis/{analysis_id}/entities", response_model=list[EntitySchema])

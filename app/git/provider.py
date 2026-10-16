@@ -10,6 +10,49 @@ class GitError(Exception):
 
 class GitProvider:
     @staticmethod
+    def is_git_repository(repo_path: str) -> bool:
+        """Check if repo_path is inside a git repository."""
+        try:
+            result = subprocess.run(
+                ["git", "rev-parse", "--is-inside-work-tree"],
+                cwd=repo_path,
+                capture_output=True,
+                text=True,
+            )
+            return result.returncode == 0 and result.stdout.strip() == "true"
+        except FileNotFoundError:
+            raise GitError("Git executable not found")
+        except Exception:
+            return False
+
+    @staticmethod
+    def ref_exists(repo_path: str, ref: str) -> bool:
+        """Check if a git ref (commit, branch, tag, etc.) exists in the repository."""
+        if not ref or not ref.strip():
+            return False
+        clean_ref = ref.strip()
+        try:
+            result = subprocess.run(
+                ["git", "rev-parse", "--verify", "--quiet", f"{clean_ref}^{{commit}}"],
+                cwd=repo_path,
+                capture_output=True,
+                text=True,
+            )
+            if result.returncode == 0:
+                return True
+            result = subprocess.run(
+                ["git", "rev-parse", "--verify", "--quiet", clean_ref],
+                cwd=repo_path,
+                capture_output=True,
+                text=True,
+            )
+            return result.returncode == 0
+        except FileNotFoundError:
+            raise GitError("Git executable not found")
+        except Exception:
+            return False
+
+    @staticmethod
     def get_current_commit(repo_path: str) -> str:
         """Get the current commit hash (HEAD)."""
         try:

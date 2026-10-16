@@ -3,4 +3,7 @@ __pycache__/
 *.pyc
 .pytest_cache/
 *.db
-.pytest-tmp/
+.pytest-tmp/
+frontend/node_modules/
+frontend/dist/
+frontend/tsconfig.tsbuildinfo
