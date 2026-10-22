@@ -26,7 +26,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
       headers: { "Content-Type": "application/json", ...init?.headers },
     });
   } catch {
-    throw new Error("Cannot reach the Nexus API. Start FastAPI and try again.");
+    throw new Error("Cannot reach the Tracegraph API. Start FastAPI and try again.");
   }
   if (!response.ok) {
     let message = `Request failed (${response.status})`;

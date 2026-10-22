@@ -1,6 +1,7 @@
 import { useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { api } from "./api";
 import type { Entity, GitImpact, Impact, Relationship, Summary } from "./api";
+import { ChangeResults, EntityResults } from "./ResultLists";
 
 type Screen = "Repository" | "Overview" | "Graph" | "Impact" | "Git changes";
 const screens: Screen[] = ["Repository", "Overview", "Graph", "Impact", "Git changes"];
@@ -68,7 +69,7 @@ export default function App() {
 
   return <div className="shell">
     <aside className="sidebar">
-      <div className="brand"><span className="brand-mark">N</span><div><b>NEXUS</b><small>CODE INTELLIGENCE</small></div></div>
+      <div className="brand"><span className="brand-mark">T</span><div><b>TRACEGRAPH</b><small>CODE INTELLIGENCE</small></div></div>
       <div className="sidebar-label">WORKSPACE</div>
       <nav>{screens.map((item, index) => <button key={item}
         className={screen === item ? "nav-item active" : "nav-item"}
@@ -76,11 +77,11 @@ export default function App() {
         <span className="nav-icon">{["⌂", "▦", "⌘", "◎", "⑂"][index]}</span>{item}
         {index === 0 && !analysis && <span className="nav-dot" />}
       </button>)}</nav>
-      <div className="sidebar-bottom"><div className="engine"><span className="online-dot" /><div><b>Analysis engine</b><small>Deterministic · Local</small></div></div><div className="sidebar-foot">NEXUS <i>·</i> MILESTONE 6</div></div>
+      <div className="sidebar-bottom"><div className="engine"><span className="online-dot" /><div><b>Analysis engine</b><small>Deterministic · Local</small></div></div><div className="sidebar-foot">TRACEGRAPH <i>·</i> MILESTONE 6</div></div>
     </aside>
 
     <main className="main">
-      <header className="topbar"><div className="breadcrumbs">Nexus <i>/</i> <b>{screen}</b></div><span className="local-badge"><span className="online-dot" /> LOCAL ANALYSIS</span></header>
+      <header className="topbar"><div className="breadcrumbs">Tracegraph <i>/</i> <b>{screen}</b></div><span className="local-badge"><span className="online-dot" /> LOCAL ANALYSIS</span></header>
       <div className="content">
         {error && <div className="alert"><b>!</b><span>{error}</span><button aria-label="Dismiss" onClick={() => setError("")}>×</button></div>}
 
@@ -91,10 +92,10 @@ export default function App() {
           <form className="panel analyze-form" onSubmit={analyzeRepository}>
             <label htmlFor="repository-path">REPOSITORY PATH</label>
             <input id="repository-path" required value={path} onChange={(event) => setPath(event.target.value)} placeholder="C:\path\to\your\repository" />
-            <div className="form-footer"><small>Local directory accessible to the Nexus API server</small><button className="primary" disabled={busy || !path.trim()}>{busy ? "Analyzing…" : <>Analyze repository <span>→</span></>}</button></div>
+            <div className="form-footer"><small>Local directory accessible to the Tracegraph API server</small><button className="primary" disabled={busy || !path.trim()}>{busy ? "Analyzing…" : <>Analyze repository <span>→</span></>}</button></div>
           </form>
           <div className="capabilities"><span>01　Python AST parsing</span><span>02　Dependency mapping</span><span>03　Git-aware impact</span></div>
-          <p className="privacy-note">Your source code is analyzed locally and is never executed by Nexus.</p>
+          <p className="privacy-note">Your source code is analyzed locally and is never executed by Tracegraph.</p>
         </section>}
 
         {screen === "Overview" && <section>
@@ -133,10 +134,10 @@ export default function App() {
             <EntityPicker items={orderedEntities} value={selectedId} onChange={chooseEntity} />
             {selected && <div className="selected-entity"><span>◎</span><div><small>SELECTED ENTITY</small><b>{selected.name}</b><code>{selected.file_path}:{selected.line_number}</code></div></div>}
             {impact ? <div className="two-column">
-              <EntityList title="Direct dependents" items={impact.direct_dependents} />
-              <EntityList title="Indirect dependents" items={impact.indirect_dependents} />
-              <EntityList title="Direct dependencies" items={impact.direct_dependencies} />
-              <EntityList title="Indirect dependencies" items={impact.indirect_dependencies} />
+              <EntityResults title="Direct dependents" items={impact.direct_dependents} />
+              <EntityResults title="Indirect dependents" items={impact.indirect_dependents} />
+              <EntityResults title="Direct dependencies" items={impact.direct_dependencies} />
+              <EntityResults title="Indirect dependencies" items={impact.indirect_dependencies} />
             </div> : <div className="panel muted center">{selected ? <button className="text-button" onClick={() => void chooseEntity(selected.id)}>Load impact for {selected.name} →</button> : "Select an entity to calculate its impact."}</div>}
             <p className="footnote">Impact is a static estimate from resolved relationships; it does not guarantee runtime behavior.</p>
           </>}
@@ -151,8 +152,8 @@ export default function App() {
             </article>
             {gitImpact && <>
               <div className="metrics three"><Metric label="CHANGED FILES" value={gitImpact.changes.length} note="Detected by local Git" /><Metric label="MAPPED ENTITIES" value={gitImpact.mapped_entities.length} note="Entities in changed files" /><Metric label="POTENTIALLY AFFECTED" value={gitImpact.potentially_affected_dependents.length} note="Dependents in baseline graph" /></div>
-              <article className="panel"><PanelHeading title="Changed files" badge={gitImpact.changes.length} />{gitImpact.changes.length ? gitImpact.changes.map((change, index) => <div className="change-row" key={change.path + index}><span className="change-type">{change.change_type}</span><code>{change.path}</code>{change.old_path && <small>from {change.old_path}</small>}</div>) : <p className="muted center">No changed files found for these refs.</p>}</article>
-              <div className="two-column"><EntityList title="Mapped entities" items={gitImpact.mapped_entities} /><EntityList title="Potentially affected dependents" items={gitImpact.potentially_affected_dependents} /></div>
+              <ChangeResults items={gitImpact.changes} />
+              <div className="two-column"><EntityResults title="Mapped entities" items={gitImpact.mapped_entities} /><EntityResults title="Potentially affected dependents" items={gitImpact.potentially_affected_dependents} /></div>
               <p className="footnote">Git impact is file-level: changed files map all of their baseline entities. New untracked files may have no baseline dependents.</p>
             </>}
           </>}
@@ -163,7 +164,7 @@ export default function App() {
 }
 
 function PageHeading({ title, detail }: { title: string; detail: string }) {
-  return <div className="page-heading"><div className="eyebrow">NEXUS ANALYSIS</div><h1>{title}</h1><p>{detail}</p></div>;
+  return <div className="page-heading"><div className="eyebrow">TRACEGRAPH ANALYSIS</div><h1>{title}</h1><p>{detail}</p></div>;
 }
 function Metric({ label, value, note }: { label: string; value: number; note: string }) {
   return <article className="metric"><small>{label}</small><b>{value.toLocaleString()}</b><span>{note}</span></article>;
@@ -179,9 +180,6 @@ function EntityPicker({ items, value, onChange }: { items: Entity[]; value: stri
 }
 function EmptyState({ onAnalyze }: { onAnalyze: () => void }) {
   return <div className="empty-state"><span>⌘</span><h3>Analyze a repository first</h3><p>Analysis results will appear here when the repository scan is complete.</p><button className="secondary" onClick={onAnalyze}>Go to repository analysis →</button></div>;
-}
-function EntityList({ title, items }: { title: string; items: Entity[] }) {
-  return <article className="panel"><PanelHeading title={title} badge={items.length} />{items.length ? items.map((entity) => <div className="entity-row" key={entity.id}><span className="entity-kind">{entity.entity_type.slice(0, 1)}</span><div><b>{entity.name}</b><small>{entity.file_path}:{entity.line_number}</small></div></div>) : <p className="muted center">No entities found.</p>}</article>;
 }
 function DependencyGraph({ selected, entities, relationships }: { selected: Entity | null; entities: Entity[]; relationships: Relationship[] }) {
   const graph = useMemo(() => {

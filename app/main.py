@@ -7,8 +7,8 @@ from app.db.migrations import init_db
 init_db(bind=engine)
 
 app = FastAPI(
-    title="Nexus API",
-    description="API for Nexus deterministic static-analysis engine.",
+    title="Tracegraph API",
+    description="API for Tracegraph's deterministic static-analysis engine.",
     version="4.0.0"
 )
 

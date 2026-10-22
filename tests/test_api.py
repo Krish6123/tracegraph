@@ -36,6 +36,12 @@ def test_health():
     assert response.status_code == 200
     assert response.json() == {"status": "ok"}
 
+def test_openapi_uses_public_branding():
+    response = client.get("/openapi.json")
+    assert response.status_code == 200
+    assert response.json()["info"]["title"] == "Tracegraph API"
+    assert "Tracegraph" in response.json()["info"]["description"]
+
 def test_analyze_sample_project():
     response = client.post("/analyze", json={"repository_path": "examples/sample_project"})
     assert response.status_code == 200
